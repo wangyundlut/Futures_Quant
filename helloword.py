@@ -1,15 +1,13 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
-"""
-hello world
-第一个程序，作为实验程序的主要程序
 
-"""
 
 # encoding: UTF-8
 # 系统模块
+
 from queue import Queue, Empty
 from threading import *
+
 class dog:
     def __init__(self):
         print('hello i')
