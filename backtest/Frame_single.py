@@ -320,9 +320,9 @@ class frame_single:
                 close_sting = num * (lastprice - closeprice)
             # 如果仓位是今日开，今日平的，平仓盈亏就等于逐笔盈亏
             if posi.loc[i, '盯开盘'] == '是':
-                self.account.loc[0, '平仓盈亏'] += close_sting
-            else:
                 self.account.loc[0, '平仓盈亏'] += close_p_l
+            else:
+                self.account.loc[0, '平仓盈亏'] += close_sting
 
 
             # ====================================记录完一次操作，要把trade里面的order的数量更新下

@@ -17,12 +17,16 @@ Positions 逐日持仓汇总
 account 逐日账单汇总
 Trade_Summary 逐笔订单
 通过六部分的组合，构建所有策略的回测系统
+
 使用方法：
-初始化：策略名称（用于之后记录回测结果的唯一参数，策略滑点，每个策略有不同的滑点，初始资金设置
-每个推送给order_driven_backtest 一个市场数据，格式固定，一个order，格式固定，由此，完成策略回测
+初始化：
+初始化市场行情等几部分，随后用于记录
+每个推送给order_driven_backtest 一个市场数据，格式固定，一个order的组合（可为空），格式固定，由此，完成策略回测
 
 1 将futures的info部分写入config
 2 将strategy的info demo部分写入config
+3 手续费不再考虑今仓和老仓，开发中低频交易策略为主，今仓和老仓可以通过持仓加大对冲来解决
+4 手续费不再考虑单边双边，一律按平仓时收取手续费，交易所1.5倍标准（中低频策略，手续费影响不大）
 """
 
 import configparser
@@ -31,10 +35,9 @@ import os
 import pandas as pd
 import copy
 
-class singles_singlei:
-    def __init__(self, strategy_name, instrument_name):
-        # 策略名称用来制作excel的名称
-        # 品种名称用来本地调用数据
+class Futures_single:
+    def __init__(self, instrument):
+        # 品种名称用来本地调用数据,例如 rb
         # 读取本地期货品种信息
         config_info = configparser.ConfigParser()
         file = os.getcwd()
@@ -52,12 +55,11 @@ class singles_singlei:
         self.marketdata_init()
         self.order_init()
         self.position_detail_init()
-        initial_money = config_strategy.getint(strategy_name, 'initial_money')
+        initial_money = config_strategy.getint('common', 'initial_money')
         self.account_init(initial_money=initial_money)
         self.trade_init()
 
-        self.strategy_name = strategy_name
-        self.instrument_name = instrument_name
+        self.instrument = instrument
 
     def marketdata_init(self):
         # 市场数据，此处品种如 j rb
@@ -68,7 +70,9 @@ class singles_singlei:
                              '最高': [None],
                              '最低': [None],
                              '今收': [None],
-                             '是否结算': [None]})
+                             '成交量': [None],
+                             '持仓量': [None],
+                             })
         self.marketdata = copy.deepcopy(init)
         self.marketdata_record = copy.deepcopy(init)
 
@@ -80,7 +84,9 @@ class singles_singlei:
                              '最高': [None],
                              '最低': [None],
                              '今收': [None],
-                             '是否结算': [None]})
+                             '成交量': [None],
+                             '持仓量': [None],
+                             })
         md = copy.deepcopy(init)
         return md
 
@@ -98,7 +104,6 @@ class singles_singlei:
         init = pd.DataFrame({'时间': [None],
                              '品种': [None],
                              '开仓时间': [None],
-                             '是否今仓': [None],
                              '盯开盘': [None],
                              '多空': [None],
                              '数量': [None],
@@ -116,7 +121,6 @@ class singles_singlei:
         init = pd.DataFrame({'时间': [None],
                              '品种': [None],
                              '开仓时间': [None],
-                             '是否今仓': [None],
                              '盯开盘': [None],
                              '多空': [None],
                              '数量': [None],
@@ -131,7 +135,6 @@ class singles_singlei:
 
     def account_init(self, initial_money):  # 初始化一个account
         init = pd.DataFrame({'时间': [None],
-                             '出入金': 0,
                              '期初': initial_money,
                              '平盯昨盈亏': 0,
                              '平盯今盈亏': 0,
@@ -146,7 +149,8 @@ class singles_singlei:
                              '风险度': 0,
                              '多头市值': 0,
                              '空头市值': 0,
-                             '市值': 0})
+                             '市值': 0,
+                             })
         self.account = copy.deepcopy(init)
         self.account_record = copy.deepcopy(init)
 
@@ -160,15 +164,15 @@ class singles_singlei:
                              '平仓操作': [None],
                              '平仓价': [None],
                              '平仓数量': [None],
+                             '盯开盘': [None],
                              '手续费': [None],
-                             '是否平今': [None],
                              '平仓盈亏': [None],
                              '净盈亏': [None],
                              '逐笔累计盈利': 0})
 
         self.trade = copy.deepcopy(init)
 
-    def main_loop(self, md, order):
+    def backtest_loop(self, md, order):
         # 单策略，单品种的回测，支持加减仓，支持单根K线多次操作（例如反手）
         # 主循环部分，循环输入市场行情，以及建仓加仓操作等
         self.marketdata = copy.deepcopy(md)
@@ -184,23 +188,26 @@ class singles_singlei:
             if order_min['买卖'] == '买开' or order_min['买卖'] == '卖开':
                 self.process_open(order_min)
             elif order_min['买卖'] == '卖平' or order_min['买卖'] == '买平':
-                self.process_closeposition(order_min)
+                self.process_close(order_min)
             else:
                 print('order 格式非标准，请重新输入order')
 
         # 更新仓位加减，多次操作之后，进行收盘价结算
-        self.close_settle()
+        self.settle()
         # 修改新开仓位盯开盘的情况
         self.position['盯开盘'] = '否'
-        # 修改是否今仓
-        if self.marketdata.loc[0, '是否结算'] == '是':
-            self.position['是否今仓'] = '否'
 
     # 处理开仓的情况
     def process_open(self, order):
-        trading_unit = self.config_info.getint(self.instrument_name, 'trading_unit')
-        margin = self.config_info.getfloat(self.instrument_name, 'margin')
-        slip = self.config_strategy.getfloat(self.strategy_name, 'slip')
+        """
+        开仓，改变self.position
+        结算时，记录position到position_record
+        :param order: 订单
+        :return: 以self的形式return
+        """
+        trading_unit = self.config_info.getint(self.instrument, 'trading_unit') # 交易单位
+        margin = self.config_info.getfloat(self.instrument, 'margin') # 保证金
+        slip = self.config_strategy.getfloat(self.instrument, 'slip') # 滑点，滑点和策略相关，也和品种相关
         last_p = self.marketdata['昨收'][0]
         toda_p = self.marketdata['今收'][0]
 
@@ -210,7 +217,6 @@ class singles_singlei:
             position.loc[0, '时间'] = order['时间']
             position.loc[0, '品种'] = order['品种']
             position.loc[0, '开仓时间'] = order['时间']
-            position.loc[0, '是否今仓'] = '是'
             position.loc[0, '盯开盘'] = '是'
             if order['买卖'] == '买开':
                 position.loc[0, '多空'] = '多'
@@ -228,21 +234,12 @@ class singles_singlei:
             position.loc[0, '盯市盈亏'] = 0
             position.loc[0, '市值'] = 0
             position.loc[0, '保证金'] = 0
-            """
-            position.loc[0, '逐笔盈亏'] = order['数量'] * (toda_p - position.loc[0, '开仓价']) * trading_unit
-            if order['买卖'] == '卖开':
-                position.loc[0, '逐笔盈亏'] = -position.loc[0, '逐笔盈亏']
-            position.loc[0, '盯市盈亏'] = position.loc[0, '逐笔盈亏']
-            position.loc[0, '市值'] = order['数量'] * toda_p * trading_unit
-            position.loc[0, '保证金'] = order['数量'] * toda_p * trading_unit * margin
-            """
         # 当前已有仓位
         else:
             ind = len(position)
             position.loc[ind, '时间'] = order['时间']
             position.loc[ind, '品种'] = order['品种']
             position.loc[ind, '开仓时间'] = order['时间']
-            position.loc[ind, '是否今仓'] = '是'
             position.loc[ind, '盯开盘'] = '是'
             if order['买卖'] == '买开':
                 position.loc[ind, '多空'] = '多'
@@ -260,29 +257,19 @@ class singles_singlei:
             position.loc[ind, '盯市盈亏'] = 0
             position.loc[ind, '市值'] = 0
             position.loc[ind, '保证金'] = 0
-            """
-            position.loc[ind, '逐笔盈亏'] = order['数量'] * (toda_p - position.loc[ind, '开仓价']) * trading_unit
-            position.loc[ind, '市值'] = order['数量'] * toda_p * trading_unit
-            if order['买卖'] == '卖开':
-                position.loc[ind, '逐笔盈亏'] = -position.loc[ind, '逐笔盈亏']
-            position.loc[ind, '盯市盈亏'] = position.loc[ind, '逐笔盈亏']
-            position.loc[ind, '保证金'] = order['数量'] * toda_p * trading_unit * margin
-            """
         # position_record记录
         self.position = copy.deepcopy(position)
 
     # 处理平仓的情况
-    def process_closeposition(self, order):
+    def process_close(self, order):
         """
-        order + position
+        改变trade
         改变position
         改变account
         """
         # 先把持仓的该品种的仓位选出来
-        instrument = order['品种']
         if order['买卖'] == '卖平':
             posi = self.position.loc[(self.position['多空'] == '多')]
-
         elif order['买卖'] == '买平':
             posi = self.position.loc[(self.position['多空'] == '空')]
 
@@ -304,13 +291,12 @@ class singles_singlei:
         order_num = order['数量']
         for i1 in range(0, ind):  # i1 + t_len 定位trade
             i = posi.index[i1]  # i 定位posi
-            c_fx_t = self.config_info.getfloat(self.instrument_name, 'commission_fix_today')
-            c_ft_t = self.config_info.getfloat(self.instrument_name, 'commission_float_today')
-            c_fx = self.config_info.getfloat(self.instrument_name, 'commission_fix')
-            c_ft = self.config_info.getfloat(self.instrument_name, 'commission_float')
-            trading_unit = self.config_info.getint(self.instrument_name, 'trading_unit')
-            slip = self.config_strategy.getfloat(self.strategy_name, 'slip')
-            num = posi.loc[i, '数量']
+
+            c_fx = self.config_info.getfloat(self.instrument, 'commission_fix')
+            c_ft = self.config_info.getfloat(self.instrument, 'commission_float')
+            trading_unit = self.config_info.getint(self.instrument, 'trading_unit')
+            slip = self.config_strategy.getfloat(self.instrument, 'slip')
+            num = posi.loc[i, '数量'] # 这个num是平掉的这个仓的数量
 
             self.trade.loc[t_len + i1, '品种'] = posi.loc[i, '品种']
             self.trade.loc[t_len + i1, '开仓时间'] = posi.loc[i, '开仓时间']
@@ -320,8 +306,8 @@ class singles_singlei:
                 self.trade.loc[t_len + i1, '开仓操作'] = '卖开'
             self.trade.loc[t_len + i1, '开仓价'] = posi.loc[i, '开仓价']
             self.trade.loc[t_len + i1, '开仓数量'] = posi.loc[i, '数量']
-            if i1 == ind - 1:
-                self.trade.loc[t_len + i1, '开仓数量'] = order_num
+            if i1 == ind - 1: # 如果是最后一个仓位，平掉的仓位就是剩下的仓位需要平掉的还没平掉的仓位
+                self.trade.loc[t_len + i1, '开仓数量'] = order_num # order_num就是最后剩下的那些仓位
                 num = order_num
             self.trade.loc[t_len + i1, '平仓时间'] = order['时间']
             self.trade.loc[t_len + i1, '平仓操作'] = order['买卖']
@@ -331,26 +317,20 @@ class singles_singlei:
                 self.trade.loc[t_len + i1, '平仓价'] = order['成交价'] + slip
             closeprice = self.trade.loc[t_len + i1, '平仓价']
             self.trade.loc[t_len + i1, '平仓数量'] = self.trade.loc[t_len + i1, '开仓数量']
-            self.trade.loc[t_len + i1, '是否平今'] = posi.loc[i, '是否今仓']
             self.trade.loc[t_len + i1, '盯开盘'] = posi.loc[i, '盯开盘']
             # 手续费
-            if posi.loc[i, '是否今仓'] == '是':
-                self.trade.loc[t_len + i1, '手续费'] = num * c_fx_t + \
-                                                      num * trading_unit * closeprice * c_ft_t
-            else:
-                self.trade.loc[t_len + i1, '手续费'] = num * c_fx + \
-                                                      num * trading_unit * closeprice * c_ft
-            commission = self.trade.loc[t_len + i1, '手续费']
+            self.trade.loc[t_len + i1, '手续费'] = num * c_fx + num * trading_unit * closeprice * c_ft
+            commission = self.trade.loc[t_len + i1, '手续费'] # 手续费要计入到account
             # 平仓盈亏计算
-            self.trade.loc[t_len + i1, '平仓盈亏'] = num * trading_unit * (closeprice - posi.loc[i, '开仓价'])
-            if posi.loc[i, '多空'] == '空':
-                self.trade.loc[t_len + i1, '平仓盈亏'] = -self.trade.loc[t_len + i1, '平仓盈亏']
-            close_p_l = self.trade.loc[t_len + i1, '平仓盈亏']
+            if posi.loc[i, '多空'] == '多':
+                self.trade.loc[t_len + i1, '平仓盈亏'] = num * trading_unit * (closeprice - posi.loc[i, '开仓价'])
+            elif posi.loc[i, '多空'] == '空':
+                self.trade.loc[t_len + i1, '平仓盈亏'] = -num * trading_unit * (closeprice - posi.loc[i, '开仓价'])
+            close_p_l = self.trade.loc[t_len + i1, '平仓盈亏'] # 平仓盈亏要记录要account
             # 净盈亏
             self.trade.loc[t_len + i1, '净盈亏'] = close_p_l - commission
             if t_len + i1 != 0:
-                self.trade.loc[t_len + i1, '逐笔累计盈利'] = self.trade.loc[
-                                                            t_len + i1 - 1, '逐笔累计盈利'] + \
+                self.trade.loc[t_len + i1, '逐笔累计盈利'] = self.trade.loc[t_len + i1 - 1, '逐笔累计盈利'] + \
                                                             self.trade.loc[t_len + i1, '净盈亏']
             else:
                 self.trade.loc[t_len + i1, '逐笔累计盈利'] = self.trade.loc[t_len + i1, '逐笔累计盈利'] + \
@@ -366,8 +346,8 @@ class singles_singlei:
                 close_sting = num * trading_unit * (lastprice - closeprice)
 
             if posi.loc[i, '盯开盘'] == '是':
-                self.account.loc[0, '平盯今盈亏'] += close_sting
-            else:
+                self.account.loc[0, '平盯今盈亏'] += close_p_l
+            elif posi.loc[i, '盯开盘'] == '是':
                 self.account.loc[0, '平盯昨盈亏'] += close_sting
 
             self.account.loc[0, '手续费'] += commission
@@ -390,14 +370,11 @@ class singles_singlei:
             self.position = self.position_detail_new()
 
     # 仓位处理之后，进行结算
-    def close_settle(self):
+    def settle(self):
         """
         结算时：
         position所有新仓变成老仓,更新逐笔浮盈和盯市浮盈，
-        其中盯市浮盈要记录到账户里去
-        并更新昨结算和今结算
-        positions合并
-        计算持仓盈亏
+        其中盯市浮盈要记录到账户里去,计算持仓盈亏
         account进行更新
 
         """
@@ -436,17 +413,21 @@ class singles_singlei:
             self.account.loc[0, '盯市盈亏'] = 0
             self.account.loc[0, '手续费'] = 0
             self.account.loc[0, '期末'] = 0
+            self.account.loc[0, '保证金'] = 0
+            self.account.loc[0, '可用资金'] = 0
+            self.account.loc[0, '风险度'] = 0
+            self.account.loc[0, '多头市值'] = 0
+            self.account.loc[0, '空头市值'] = 0
+            self.account.loc[0, '市值'] = 0
 
-            # 首先更新position
         elif self.position.loc[0, '品种'] != None:
+            # ============================================position
             for i in range(0, len(self.position)):
-                trading_unit = self.config_info.getint(self.instrument_name, 'trading_unit')
-                margin = self.config_info.getint(self.instrument_name, 'margin')
+                trading_unit = self.config_info.getint(self.instrument, 'trading_unit')
+                margin = self.config_info.getint(self.instrument, 'margin')
                 num = self.position.loc[i, '数量']
-                last_p = self.marketdata.loc[
-                    self.marketdata['品种'] == self.position.loc[i, '品种'], '昨收'][0]
-                toda_p = self.marketdata.loc[
-                    self.marketdata['品种'] == self.position.loc[i, '品种'], '今收'][0]
+                last_p = self.marketdata['昨收'][0]
+                toda_p = self.marketdata['今收'][0]
                 open_p = self.position.loc[i, '开仓价']
                 self.position.loc[i, '时间'] = time
                 self.position.loc[i, '昨收'] = last_p
@@ -460,16 +441,13 @@ class singles_singlei:
                 # 更新盯市盈亏
                 if self.position.loc[i, '盯开盘'] == '是':
                     trade_by_trade = (toda_p - open_p) * trading_unit * num
-                    if self.position.loc[i, '多空'] == '多':
-                        self.position.loc[i, '盯市盈亏'] = trade_by_trade
-                    elif self.position.loc[i, '多空'] == '多':
-                        self.position.loc[i, '盯市盈亏'] = -trade_by_trade
                 elif self.position.loc[i, '盯开盘'] == '否':
                     trade_by_day = (toda_p - last_p) * trading_unit * num
-                    if self.position.loc[i, '多空'] == '多':
-                        self.position.loc[i, '盯市盈亏'] = trade_by_day
-                    elif self.position.loc[i, '多空'] == '多':
-                        self.position.loc[i, '盯市盈亏'] = -trade_by_day
+
+                if self.position.loc[i, '多空'] == '多':
+                    self.position.loc[i, '盯市盈亏'] = trade_by_trade
+                elif self.position.loc[i, '多空'] == '空':
+                    self.position.loc[i, '盯市盈亏'] = -trade_by_trade
 
                 self.position.loc[i, '市值'] = num * trading_unit * toda_p
                 self.position.loc[i, '保证金'] = num * trading_unit * toda_p * margin
@@ -477,7 +455,7 @@ class singles_singlei:
             # 记录positon_record
             self.position_record = self.position_record.append(self.position)
 
-            # 计算account
+            # ============================================account
             self.account.loc[0, '时间'] = time
             self.account.loc[0, '平仓盈亏'] = self.account.loc[0, '平盯昨盈亏'] + \
                                              self.account.loc[0, '平盯今盈亏']
@@ -496,11 +474,12 @@ class singles_singlei:
             self.account.loc[0, '保证金'] = self.position['保证金'].sum()
             self.account.loc[0, '可用资金'] = self.account.loc[0, '期末'] - \
                                             self.account.loc[0, '保证金']
-            if self.account.loc[0, '期末'] != 0:
+            if self.account.loc[0, '期末'] != 0: # 如果期末还有钱。。。。。
                 self.account.loc[0, '风险度'] = self.account.loc[0, '保证金'] / \
                                                self.account.loc[0, '期末']
             else:
-                self.account.loc[0, '风险度'] = 0
+                self.account.loc[0, '风险度'] = 0 # 期末都没有钱了
+
             self.account.loc[0, '多头市值'] = self.position.loc[
                 self.position['多空'] == '多', '市值'].sum()
 
@@ -512,6 +491,7 @@ class singles_singlei:
 
             if self.account.loc[0, '空头市值'] == False:
                 self.account.loc[0, '空头市值'] = 0
+
             self.account.loc[0, '市值'] = self.account.loc[0, '多头市值'] + \
                                          self.account.loc[0, '空头市值']
 
@@ -528,57 +508,52 @@ class singles_singlei:
             self.account.loc[0, '盯市盈亏'] = 0
             self.account.loc[0, '手续费'] = 0
             self.account.loc[0, '期末'] = 0
+            self.account.loc[0, '保证金'] = 0
+            self.account.loc[0, '可用资金'] = 0
+            self.account.loc[0, '风险度'] = 0
+            self.account.loc[0, '多头市值'] = 0
+            self.account.loc[0, '空头市值'] = 0
+            self.account.loc[0, '市值'] = 0
 
-    def backtest_record_save(self):
+    def record_process(self):
+        # 输入本地存储的文件夹名称及文件名称，存储回测结果
+        # =======================先reset_index
         self.marketdata_record = self.marketdata_record.reset_index(drop=True)
         self.order_record = self.order_record.reset_index(drop=True)
         self.position_record = self.position_record.reset_index(drop=True)
-        self.positions_record = self.positions_record.reset_index(drop=True)
         self.trade = self.trade.reset_index(drop=True)
         self.account_record = self.account_record.reset_index(drop=True)
-
-        marketcond1 = (self.marketdata_record.iloc[0, 0] == None)
-        marketcond2 = (self.marketdata_record.iloc[0, 1] == None)
+        # ========================这里修复了一个不明原因的bug
+        marketcond1 = (self.marketdata_record.loc[0, '时间'] == None)
+        marketcond2 = (self.marketdata_record.loc[0, '品种'] == None)
         if marketcond1 or marketcond2:
             self.marketdata_record.drop([0], inplace=True)
 
-        ordercond1 = (self.order_record.iloc[0, 0] == None)
-        ordercond2 = (self.order_record.iloc[0, 1] == None)
+        ordercond1 = (self.order_record.loc[0, '时间'] == None)
+        ordercond2 = (self.order_record.loc[0, '品种'] == None)
         if ordercond1 or ordercond2:
             self.order_record.drop([0], inplace=True)
 
-        positioncond1 = (self.position_record.iloc[0, 0] == None)
-        positioncond2 = (self.position_record.iloc[0, 1] == None)
+        positioncond1 = (self.position_record.loc[0, '时间'] == None)
+        positioncond2 = (self.position_record.loc[0, '品种'] == None)
         if positioncond1 or positioncond2:
             self.position_record.drop([0], inplace=True)
 
-        if self.positions_record.iloc[0, 0] == None:
-            self.positions_record.drop([0], inplace=True)
-
-        if self.trade.iloc[0, 0] == None:
+        if self.trade.loc[0, '品种'] == None:
             self.trade.drop([0], inplace=True)
 
-        if self.account_record.iloc[0, 0] == None:
+        if self.account_record.iloc[0, '品种'] == None:
             self.account_record.drop([0], inplace=True)
-
+        # ==========================再次reset_index把index设置好
         self.marketdata_record = self.marketdata_record.reset_index(drop=True)
         self.order_record = self.order_record.reset_index(drop=True)
         self.position_record = self.position_record.reset_index(drop=True)
-        self.positions_record = self.positions_record.reset_index(drop=True)
         self.trade = self.trade.reset_index(drop=True)
         self.account_record = self.account_record.reset_index(drop=True)
-        """
-        self.marketdata = marketdata
-        self.order = order
-        self.position = position
-        self.positions = positions
-        self.account = account
-        self.trade = trade
-        self.strategyname = strategyname
-        """
 
+    def backtest_record_save(self, file_name, strategy_name):
         filename = os.getcwd()
-        filename = os.path.join(filename, 'backtest_result', self.strategy_name, '.xlsx')
+        filename = os.path.join(filename, 'backtest_result', file_name, strategy_name, '.xlsx')
         if not os.path.exists(filename):
             wb = xlwt.Workbook()
             wb.add_sheet('marketdata')
@@ -586,7 +561,6 @@ class singles_singlei:
             wb.add_sheet('position')
             wb.add_sheet('trade')
             wb.add_sheet('account')
-            # wb.add_sheet('summary')
             wb.save(filename)
 
         xlswriter = pd.ExcelWriter(filename)
@@ -594,16 +568,14 @@ class singles_singlei:
         self.marketdata_record.to_excel(xlswriter, sheet_name='marketdata')
         self.order_record.to_excel(xlswriter, sheet_name='order')
         self.position_record.to_excel(xlswriter, sheet_name='position')
-        self.positions_record.to_excel(xlswriter, sheet_name='positions')
         self.trade.to_excel(xlswriter, sheet_name='trade')
         self.account_record.to_excel(xlswriter, sheet_name='account')
-        # marketdata.DataFrame.to_excel(filename, sheet_name='summary')
+
         xlswriter.save()
-        # print(self.strategyname'], '   Save Done!!!')
 
 
 def main():
-    self = singles_singlei(strategy_name='EMA',instrument_name='J')
+    self = Futures_single(instrument='J')
     md = self.marketdata_new()
     order = self.order_new()
 
@@ -634,7 +606,7 @@ def main():
     order.loc[2, '成交价'] = 4060
     order.loc[2, '数量'] = 24
 
-    self.main_loop(md, order)
+    self.backtest_loop(md, order)
     md = self.marketdata_new()
     order = self.order_new()
     md.loc[0, '时间'] = '2018-02-02 09:30:00'
@@ -642,18 +614,9 @@ def main():
     md.loc[0, '昨收'] = 4020
     md.loc[0, '今收'] = 4040
     md.loc[0, '是否结算'] = '是'
-    self.main_loop(md, order)
+    self.backtest_loop(md, order)
 
     print("Done")
-
-
-if __name__ == '__main__':
-    main()
-
-
-
-def main():
-    print('Hello world!!!')
 
 
 if __name__ == '__main__':
