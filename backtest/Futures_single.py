@@ -1,12 +1,14 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# author: WangYun 
+# Author     : Jack
+
+
 """
-单策略单品种的CTA策略回测框架
-singles_singlei
-总体思路不变
+多策略单品种的CTA策略回测框架
+Futures_single
 
 订单驱动型回测系统
-主要模仿交易所的逐日盯市 + 逐笔 账单来制定回测系统
+主要模仿交易所的逐日盯市 + 逐笔账单来制定回测系统
 包括MarketData Order position Positions  Account_Summary Trade_Summary期货账单六部分
 MarketData 模仿行情推送
 Order Order定制
@@ -18,7 +20,7 @@ Trade_Summary 逐笔订单
 使用方法：
 初始化：策略名称（用于之后记录回测结果的唯一参数，策略滑点，每个策略有不同的滑点，初始资金设置
 每个推送给order_driven_backtest 一个市场数据，格式固定，一个order，格式固定，由此，完成策略回测
-修改：
+
 1 将futures的info部分写入config
 2 将strategy的info demo部分写入config
 """
@@ -643,6 +645,15 @@ def main():
     self.main_loop(md, order)
 
     print("Done")
+
+
+if __name__ == '__main__':
+    main()
+
+
+
+def main():
+    print('Hello world!!!')
 
 
 if __name__ == '__main__':
