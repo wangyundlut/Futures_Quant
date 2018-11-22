@@ -7,5 +7,6 @@
 *.iml
 out
 gen
+*.xlsx
 
 .pytest_cache/

@@ -8,7 +8,7 @@ import os
 def main():
     config = configparser.ConfigParser()
     file = os.getcwd()
-    file = os.path.join(file, 'config', 'futures_info.ini')
+    file = os.path.join(os.path.dirname(file), 'config', 'futures_info.ini')
     config.read(file)
 
     section_list = config.sections()
