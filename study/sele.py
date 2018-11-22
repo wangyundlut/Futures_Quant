@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # author: WangYun 
-# time :2018/11/6
+
 
 from selenium import webdriver
 

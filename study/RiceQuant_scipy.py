@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # author: WangYun 
-# time :2018/10/18 
+
 
 from scipy import io as spio
 import numpy as np

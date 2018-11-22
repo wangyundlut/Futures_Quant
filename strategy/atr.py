@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # author:@Jack.Wang
-# time :2018/9/12 22:32
+
 import pandas as pd
 import scipy.io as sio
 import numpy as np

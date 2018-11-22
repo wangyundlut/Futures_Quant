@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # author: WangYun 
-# time :2018/10/24 
+
 
 from collections import deque
 # 输入当前状态，装油的量

@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 # author:@Jack.Wang
-# time :2018/8/31 21:26
+
 
 from EventEngine.EventEngine import EventManager, Event
 from data_get_save.PostgreSQL import PostgreSQL

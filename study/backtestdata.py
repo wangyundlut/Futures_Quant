@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 # author:@Jack.Wang
-# time :2018/8/22 20:05
+
 
 """
 数据导入Phthon和导入到数据库里

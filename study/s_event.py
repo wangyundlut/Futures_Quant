@@ -1,10 +1,7 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
 # author:@Jack.Wang
-# time :&{DATE}
 
-#!/usr/bin/python
-# -*- coding: UTF-8 -*-
 
 
 """

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # author: WangYun 
-# time :2018/9/21 
+
 from sklearn.datasets import load_iris
 import numpy as np
 from collections import defaultdict

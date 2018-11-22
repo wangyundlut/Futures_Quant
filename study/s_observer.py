@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
+
 """
 观察者模式，为python事件的学习做准备
 

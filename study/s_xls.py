@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 # author:@Jack.Wang
-# time :2018/8/27 11:23
+
 import xlrd
 import xlwt
 

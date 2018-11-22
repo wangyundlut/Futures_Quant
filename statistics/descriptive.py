@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # author:@Jack.Wang
-# time :2018/9/17 10:09
+
 from statistics.statistics_data import statistics_data
 import pandas as pd
 import matplotlib.pyplot as plt

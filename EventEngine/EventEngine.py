@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 # author:@Jack.Wang
-# time :2018/8/29 19:11
+
 
 from threading import *
 from queue import Queue, Empty

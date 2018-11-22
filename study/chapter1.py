@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # author: WangYun 
-# time :2018/9/20 
+
 import numpy as np
 from collections import defaultdict
 from operator import itemgetter

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # author:@Jack.Wang
-# time :2018/9/6 9:56
+
 
 """
 开发基于MACD的策略，

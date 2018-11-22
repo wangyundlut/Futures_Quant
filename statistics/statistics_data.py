@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # author:@Jack.Wang
-# time :2018/9/17 10:10
+
 
 from data_get_save.PostgreSQL import PostgreSQL
 from data_get_save.kline_process import kline_process

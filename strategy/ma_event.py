@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # author: WangYun 
-# time :2018/9/21
+
 
 import numpy as np
 import scipy.io as sio

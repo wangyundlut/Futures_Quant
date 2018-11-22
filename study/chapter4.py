@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # author: WangYun 
-# time :2018/9/30 
+
 
 import os
 import pandas as pd
