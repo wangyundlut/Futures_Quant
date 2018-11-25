@@ -321,7 +321,7 @@ class frame_single:
             # 如果仓位是今日开，今日平的，平仓盈亏就等于逐笔盈亏
             if posi.loc[i, '盯开盘'] == '是':
                 self.account.loc[0, '平仓盈亏'] += close_p_l
-            else:
+            elif posi.loc[i, '盯开盘'] == '否':
                 self.account.loc[0, '平仓盈亏'] += close_sting
 
 
@@ -419,7 +419,7 @@ class frame_single:
             # 记录positon_record
             self.position_record = self.position_record.append(self.position)
 
-            # ===============================account
+            # ===========account====================
             self.account.loc[0, '时间'] = time
             position = copy.deepcopy(self.position)
             # 结算仓位盯昨盯今情况
@@ -437,6 +437,7 @@ class frame_single:
                 self.position['多空'] == '空', '市值'].sum()
             if self.account.loc[0, '空头市值'] == False:
                 self.account.loc[0, '空头市值'] = 0
+
             self.account.loc[0, '市值'] = self.account.loc[0, '多头市值'] + \
                                         self.account.loc[0, '空头市值']
 
@@ -490,7 +491,7 @@ class frame_single:
         if self.trade.loc[0, '品种'] == None:
             self.trade.drop([0], inplace=True)
 
-        if self.account_record.iloc[0, '品种'] == None:
+        if self.account_record.loc[0, '时间'] == None:
             self.account_record.drop([0], inplace=True)
         # ==========================再次reset_index把index设置好
         self.marketdata_record = self.marketdata_record.reset_index(drop=True)
@@ -501,7 +502,10 @@ class frame_single:
 
     def backtest_record_save(self, file_name, strategy_name):
         filename = os.getcwd()
-        filename = os.path.join(filename, 'backtest_result', file_name, strategy_name, '.xlsx')
+        files = os.path.join(os.path.dirname(filename), 'backtest_result', file_name)
+        if not os.path.exists(files):
+            os.mkdir(files)
+        filename = os.path.join(files, strategy_name + '.xlsx')
         if not os.path.exists(filename):
             wb = xlwt.Workbook()
             wb.add_sheet('marketdata')
@@ -510,6 +514,8 @@ class frame_single:
             wb.add_sheet('trade')
             wb.add_sheet('account')
             wb.save(filename)
+        else:
+            print('策略名称已存在，请改变策略名称！！！')
 
         xlswriter = pd.ExcelWriter(filename)
 
@@ -534,7 +540,7 @@ def main():
     md.loc[0, '昨收'] = 8000
     md.loc[0, '开盘'] = 8000
     md.loc[0, '最高'] = 8170
-    md.loc[0, '最低'] = 8130
+    md.loc[0, '最低'] = 8000
     md.loc[0, '今收'] = 8150
     md.loc[0, '成交量'] = 40000
     self.backtest_loop(md, order)
@@ -542,11 +548,11 @@ def main():
 
     md.loc[0, '时间'] = '2018-10-01'
     md.loc[0, '品种'] = 'btc'
-    md.loc[0, '昨收'] = 8000
-    md.loc[0, '开盘'] = 8000
-    md.loc[0, '最高'] = 8170
-    md.loc[0, '最低'] = 8130
-    md.loc[0, '今收'] = 8150
+    md.loc[0, '昨收'] = 8150
+    md.loc[0, '开盘'] = 8150
+    md.loc[0, '最高'] = 8180
+    md.loc[0, '最低'] = 8000
+    md.loc[0, '今收'] = 8100
     md.loc[0, '成交量'] = 40000
 
     order.loc[0, '时间'] = '2018-10-01'
@@ -573,20 +579,22 @@ def main():
 
     md.loc[0, '时间'] = '2018-10-02'
     md.loc[0, '品种'] = 'btc'
-    md.loc[0, '昨收'] = 8150
-    md.loc[0, '开盘'] = 8150
+    md.loc[0, '昨收'] = 8100
+    md.loc[0, '开盘'] = 8100
     md.loc[0, '最高'] = 8190
-    md.loc[0, '最低'] = 8000
+    md.loc[0, '最低'] = 7800
     md.loc[0, '今收'] = 8020
     md.loc[0, '成交量'] = 40000
 
-    order.loc[2, '时间'] = '2018-10-02'
-    order.loc[2, '品种'] = 'btc'
-    order.loc[2, '买卖'] = '卖平'
-    order.loc[2, '成交价'] = 8060
-    order.loc[2, '数量'] = 1
+    order.loc[0, '时间'] = '2018-10-02'
+    order.loc[0, '品种'] = 'btc'
+    order.loc[0, '买卖'] = '卖平'
+    order.loc[0, '成交价'] = 8070
+    order.loc[0, '数量'] = 2
 
     self.backtest_loop(md, order)
+    self.record_process()
+    self.backtest_record_save('test', 'test')
 
     print("Done")
 
