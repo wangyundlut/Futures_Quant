@@ -34,7 +34,7 @@ import copy
 
 class frame_single:
 
-    # 输入策略名称，输入合约名称，进行回测
+    # 输入合约名称，进行回测
     def __init__(self, instrument_name):
         config_info = configparser.ConfigParser()
         file = os.path.dirname(os.getcwd())
@@ -504,7 +504,7 @@ class frame_single:
         filename = os.getcwd()
         files = os.path.join(os.path.dirname(filename), 'backtest_result', file_name)
         if not os.path.exists(files):
-            os.mkdir(files)
+            os.makedirs(files)
         filename = os.path.join(files, strategy_name + '.xlsx')
         if not os.path.exists(filename):
             wb = xlwt.Workbook()
