@@ -12,6 +12,7 @@ __all__ = [
     'backtest_instantiation',
     'deploy',
     'daily',
-    'statistics'
+    'statistics',
+    'vnpy_backtest_imitation'
 
     ]
