@@ -4,7 +4,7 @@
 
 import pymongo
 from collections import OrderedDict
-import datetime
+from datetime import datetime, timedelta
 
 from vnpy_backtest_imitation.vnrpc import RpcServer,RpcClient,RemoteException
 from vnpy_backtest_imitation.vtFunction import globalSetting
@@ -77,7 +77,7 @@ class BacktestingEngine:
         self.dailyResultDict = OrderedDict()
 
 
-        # ===================================================
+        # ========================test数据==========================
         self.dataStartDate = datetime.strptime("2014-07-04 21:30:00", "%Y-%m-%d %H:%M:%S")
         self.dataEndDate = datetime.strptime("2014-07-08 14:30:00", "%Y-%m-%d %H:%M:%S")
         self.strategyStartDate = datetime.strptime("2014-07-04 21:35:00", "%Y-%m-%d %H:%M:%S")
@@ -458,6 +458,69 @@ class BacktestingEngine:
         self.strategy.onStopOrder(so)
 
         return [stopOrderID]
+
+    # ------------------------------------------------
+    # 参数设置相关
+    # ------------------------------------------------
+
+    # ----------------------------------------------------------------------
+    def setStartDate(self, startDate="2014-07-04",  initDays=10):
+        """设置回测的启动日期，这里设置了时间的起始方式"""
+        self.startDate = startDate
+        self.initDays = initDays
+
+        self.dataStartDate = datetime.strptime(startDate, '%Y-%m-%d')
+
+        initTimeDelta = timedelta(initDays)
+        self.strategyStartDate = self.dataStartDate + initTimeDelta
+
+    # ----------------------------------------------------------------------
+    def setEndDate(self, endDate=''):
+        """设置回测的结束日期"""
+        self.endDate = endDate
+
+        if endDate:
+            self.dataEndDate = datetime.strptime(endDate, '%Y-%m-%d')
+
+            # 若不修改时间则会导致不包含dataEndDate当天数据
+            self.dataEndDate = self.dataEndDate.replace(hour=23, minute=59)
+
+            # ----------------------------------------------------------------------
+
+    def setBacktestingMode(self, mode):
+        """设置回测模式"""
+        self.mode = mode
+
+    # ----------------------------------------------------------------------
+    def setDatabase(self, dbName, symbol):
+        """设置历史数据所用的数据库"""
+        self.dbName = dbName
+        self.symbol = symbol
+
+    # ----------------------------------------------------------------------
+    def setCapital(self, capital):
+        """设置资本金"""
+        self.capital = capital
+
+    # ----------------------------------------------------------------------
+    def setSlippage(self, slippage):
+        """设置滑点点数"""
+        self.slippage = slippage
+
+    # ----------------------------------------------------------------------
+    def setSize(self, size):
+        """设置合约大小"""
+        self.size = size
+
+    # ----------------------------------------------------------------------
+    def setRate(self, rate):
+        """设置佣金比例"""
+        self.rate = rate
+
+    # ----------------------------------------------------------------------
+    def setPriceTick(self, priceTick):
+        """设置价格最小变动"""
+        self.priceTick = priceTick
 
 
 ########################################################################
