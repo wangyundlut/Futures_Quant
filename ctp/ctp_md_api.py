@@ -110,10 +110,13 @@ class zyc_ctpmd(MdApi,zyc_time):
         
 if __name__=='__main__':
     # 测试
+    import time
     self=zyc_ctpmd()
     self.connect('123609', 'wangyun199', '9999', 'tcp://180.168.146.187:10011')
-    self.subscribeMarketData('rb1901')
+    time.sleep(2)
+    self.subscribeMarketData('cu1902')
     self.subscribeMarketData('rb1910')
+    time.sleep(100)
     # 模拟
     # 这是实盘
     # self.connect('999819992', '5172187a', '9000', 'tcp://61.140.230.188:41205')
