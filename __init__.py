@@ -13,6 +13,7 @@ __all__ = [
     'deploy',
     'daily',
     'statistics',
-    'vnpy_backtest_imitation'
+    'vnpy_backtest_imitation',
+    'vnpy_change'
 
     ]

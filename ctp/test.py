@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
-# author:@Jack.Wang
-# time :2018/8/14 17:57
+
+
 
 from vnctpmd import MdApi
 import time
