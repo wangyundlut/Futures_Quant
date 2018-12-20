@@ -1,5 +1,5 @@
-# encoding: UTF-8
-
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 """
 常用函数
 检查接口数据潜在错误，保证转换为字符串

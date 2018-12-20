@@ -1,5 +1,5 @@
-# encoding: UTF-8
-
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 '''
 本文件中实现了行情数据记录引擎，用于汇总TICK数据，并生成K线插入数据库。
 
@@ -17,14 +17,14 @@ from queue import Queue, Empty
 from threading import Thread
 from pymongo.errors import DuplicateKeyError
 
-from vnpy.event import Event
-from vnpy.trader.vtEvent import *
-from vnpy.trader.vtFunction import todayDate, getJsonPath
-from vnpy.trader.vtObject import VtSubscribeReq, VtLogData, VtBarData, VtTickData
-from vnpy.trader.vtUtility import BarGenerator
+from vnpy_change.event import Event
+from vnpy_change.trader.vtEvent import *
+from vnpy_change.trader.vtFunction import todayDate, getJsonPath
+from vnpy_change.trader.vtObject import VtSubscribeReq, VtLogData, VtBarData, VtTickData
+from vnpy_change.trader.vtUtility import BarGenerator
 
-from .drBase import *
-from .language import text
+from vnpy_change.trader.app.dataRecorder.drBase import *
+from vnpy_change.trader.app.dataRecorder.data_recorder_constant import *
 
 
 ########################################################################
@@ -239,7 +239,7 @@ class DrEngine(object):
                 self.insertData(TICK_DB_NAME, activeSymbol, tick)
             
             
-            self.writeDrLog(text.TICK_LOGGING_MESSAGE.format(symbol=tick.vtSymbol,
+            self.writeDrLog(TICK_LOGGING_MESSAGE.format(symbol=tick.vtSymbol,
                                                              time=tick.time, 
                                                              last=tick.lastPrice, 
                                                              bid=tick.bidPrice1, 
@@ -256,7 +256,7 @@ class DrEngine(object):
             activeSymbol = self.activeSymbolDict[vtSymbol]
             self.insertData(MINUTE_DB_NAME, activeSymbol, bar)                    
         
-        self.writeDrLog(text.BAR_LOGGING_MESSAGE.format(symbol=bar.vtSymbol, 
+        self.writeDrLog(BAR_LOGGING_MESSAGE.format(symbol=bar.vtSymbol,
                                                         time=bar.time, 
                                                         open=bar.open, 
                                                         high=bar.high, 
@@ -314,5 +314,4 @@ class DrEngine(object):
         log.logContent = content
         event = Event(type_=EVENT_DATARECORDER_LOG)
         event.dict_['data'] = log
-        self.eventEngine.put(event)   
-    
+        self.eventEngine.put(event)

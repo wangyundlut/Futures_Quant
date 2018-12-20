@@ -1,4 +1,5 @@
-# encoding: UTF-8
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 
 INIT = u'初始化'
 START = u'启动'

@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 
 
-def test():
+def main_test():
     pass
 
 
 if __name__ == '__main__':
-    test()
+    main_test()
