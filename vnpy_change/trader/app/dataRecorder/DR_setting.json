@@ -3,16 +3,21 @@
 
     "tick":
     [
+        ["au1906", "CTP"],
+        ["rb1905", "CTP"],
+        ["j1905", "CTP"],
+        ["CF905", "CTP"],
+        ["sc1903", "CTP"]
     ],
 
     "bar":
     [
-        ["BTC_CNY_SPOT", "OKCOIN"],
-        ["LTC_CNY_SPOT", "OKCOIN"],
-        ["ETH_CNY_SPOT", "OKCOIN"]
+
     ],
 
     "active":
     {
-    }
+    },
+
+    "marketCloseTime": "15:00:00"
 }

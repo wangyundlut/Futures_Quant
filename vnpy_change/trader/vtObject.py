@@ -40,7 +40,7 @@ class VtTickData(VtBaseData):
         self.volume = EMPTY_INT                 # 今天总成交量
         self.openInterest = EMPTY_INT           # 持仓量
         self.time = EMPTY_STRING                # 时间 11:20:56.5
-        self.date = EMPTY_STRING                # 日期 20151009
+        self.date = EMPTY_STRING                # 日期 2015-10-09
         self.datetime = None                    # python的datetime时间对象
         
         # 常规行情

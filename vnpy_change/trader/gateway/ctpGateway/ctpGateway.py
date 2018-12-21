@@ -354,10 +354,13 @@ class CtpMdApi(MdApi):
         tick.lastPrice = data['LastPrice']
         tick.volume = data['Volume']
         tick.openInterest = data['OpenInterest']
-        tick.time = '.'.join([data['UpdateTime'], str(data['UpdateMillisec']/100)])
+        # 毫秒在转换的时候，要用到
+        tick.time = '.'.join([data['UpdateTime'], str(int(data['UpdateMillisec']/100))])
         
         # 上期所和郑商所可以直接使用，大商所需要转换
-        tick.date = data['ActionDay']
+        # 这里需要注意一下，有人用TradingDay 交易日期 来记录日期，有人用ActionDay 业务日期 来记录日期
+        tick.date = data['ActionDay'][:4] + '-' + data['ActionDay'][4:6] + '-' + data['ActionDay'][6:8]
+        # tick.date = data['ActionDay']
         
         tick.openPrice = data['OpenPrice']
         tick.highPrice = data['HighestPrice']
@@ -375,9 +378,10 @@ class CtpMdApi(MdApi):
         
         # 大商所日期转换
         if tick.exchange == EXCHANGE_DCE:
-            tick.date = datetime.now().strftime('%Y%m%d')
+            tick.date = datetime.now().strftime('%Y-%m-%d')
 
         # 上交所，SEE，股票期权相关
+        """
         if tick.exchange == EXCHANGE_SSE:
             tick.bidPrice2 = data['BidPrice2']
             tick.bidVolume2 = data['BidVolume2']
@@ -400,7 +404,7 @@ class CtpMdApi(MdApi):
             tick.askVolume5 = data['AskVolume5']
 
             tick.date = data['TradingDay']
-
+        """
         self.gateway.onTick(tick)
         
     #---------------------------------------------------------------------- 

@@ -1,11 +1,12 @@
-# encoding: UTF-8
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 
-from __future__ import absolute_import
+
 from .drEngine import DrEngine
-from .uiDrWidget import DrEngineManager
+# from .uiDrWidget import DrEngineManager
 
 appName = 'DataRecorder'
 appDisplayName = u'行情记录'
 appEngine = DrEngine
-appWidget = DrEngineManager
+# appWidget = DrEngineManager
 appIco = 'dr.ico'

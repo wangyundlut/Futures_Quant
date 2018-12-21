@@ -10,9 +10,10 @@ import json
 import csv
 import os
 import copy
+import time
 import traceback
 from collections import OrderedDict
-from datetime import datetime, timedelta, time
+from datetime import datetime, timedelta
 from queue import Queue, Empty
 from threading import Thread
 from pymongo.errors import DuplicateKeyError
@@ -72,7 +73,8 @@ class DrEngine(object):
         self.start()
     
         # 注册事件监听
-        self.registerEvent()  
+        self.registerEvent()
+        print('数据记录引擎已启动！！！')
     
     #----------------------------------------------------------------------
     def loadSetting(self):
@@ -168,6 +170,8 @@ class DrEngine(object):
                     self.bgDict[vtSymbol] = BarGenerator(self.onBar)
 
             # 主力合约记录配置
+            # 这里是映射，指数合约映射到主力合约
+            # 或者主力合约映射到其它合约
             if 'active' in drSetting:
                 d = drSetting['active']
                 self.activeSymbolDict = {vtSymbol:activeSymbol for activeSymbol, vtSymbol in d.items()}
@@ -175,6 +179,7 @@ class DrEngine(object):
     #----------------------------------------------------------------------
     def getSetting(self):
         """获取配置"""
+        # 配置字典和主力映射字典
         return self.settingDict, self.activeSymbolDict
 
     #----------------------------------------------------------------------
@@ -186,15 +191,16 @@ class DrEngine(object):
         # 生成datetime对象
         if not tick.datetime:
             if '.' in tick.time:
-                tick.datetime = datetime.strptime(' '.join([tick.date, tick.time]), '%Y%m%d %H:%M:%S.%f')
+                tick.datetime = datetime.strptime(' '.join([tick.date, tick.time]), '%Y-%m-%d %H:%M:%S.%f')
             else:
-                tick.datetime = datetime.strptime(' '.join([tick.date, tick.time]), '%Y%m%d %H:%M:%S')
+                tick.datetime = datetime.strptime(' '.join([tick.date, tick.time]), '%Y-%m-%d %H:%M:%S')
 
         self.onTick(tick)
-        
+        """
         bm = self.bgDict.get(vtSymbol, None)
         if bm:
             bm.updateTick(tick)
+        """
     
     #----------------------------------------------------------------------
     def processTimerEvent(self, event):
@@ -267,7 +273,7 @@ class DrEngine(object):
     def registerEvent(self):
         """注册事件监听"""
         self.eventEngine.register(EVENT_TICK, self.procecssTickEvent)
-        self.eventEngine.register(EVENT_TIMER, self.processTimerEvent)
+        # self.eventEngine.register(EVENT_TIMER, self.processTimerEvent)
  
     #----------------------------------------------------------------------
     def insertData(self, dbName, collectionName, data):
@@ -277,6 +283,7 @@ class DrEngine(object):
     #----------------------------------------------------------------------
     def run(self):
         """运行插入线程"""
+        # 这个一直跑，会不会卡死其它的线程？
         while self.active:
             try:
                 dbName, collectionName, d = self.queue.get(block=True, timeout=1)
@@ -289,10 +296,12 @@ class DrEngine(object):
                 # 使用insert模式更新数据，可能存在时间戳重复的情况，需要用户自行清洗
                 try:
                     self.mainEngine.dbInsert(dbName, collectionName, d)
+                    print(dbName + collectionName + '插入成功')
                 except DuplicateKeyError:
-                    self.writeDrLog(u'键值重复插入失败，报错信息：%s' %traceback.format_exc())
+                    self.writeDrLog(u'键值重复插入失败，报错信息：%s' % traceback.format_exc())
             except Empty:
-                pass
+                time.sleep(0.5)
+                # pass
             
     #----------------------------------------------------------------------
     def start(self):

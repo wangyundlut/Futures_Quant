@@ -72,7 +72,9 @@ class zyc_ctpmd(MdApi, zyc_time):
         self.data = data
         try:
             self.zyc_print(
-                '行情推送:' + data['UpdateTime'] + ',品种:' + data['InstrumentID'] + ',最新价格:' + str(data['LastPrice']))
+                '行情推送:' + data['UpdateTime'] + ',品种:' + data['InstrumentID'] + ',最新价格:' +
+                str(data['LastPrice']) + ' TradingDay: ' + data['TradingDay'] + ' ActionDay: ' + data['ActionDay'])
+            # print(data)
             # print(data)
             # data=self.data
             InstrumentID = data['InstrumentID']
@@ -101,6 +103,12 @@ class zyc_ctpmd(MdApi, zyc_time):
 
     def onRspSubMarketData(self, data, error, n, last):
         self.zyc_print('订阅合约回报' + str(data))
+        """
+        try:
+            self.zyc_print('订阅合约回报' + str(error))
+        except Exception as e:
+            print(e)
+        """
 
     def onRspUnSubMarketData(self, data, error, n, last):
         self.zyc_print('退订合约回报' + str(data))
@@ -118,11 +126,15 @@ class zyc_ctpmd(MdApi, zyc_time):
 if __name__ == '__main__':
     # 测试
     self = zyc_ctpmd()
-    time.sleep(3)
-    self.connect('123609', 'wangyun199', '9999', 'tcp://180.168.146.187:10011')
-    time.sleep(5)
+    self.connect('10201091', '5172187a', '8016', 'tcp://101.230.15.17:41213')
+    # self.connect('123609', 'wangyun199', '9999', 'tcp://180.168.146.187:10011')
+    import threading
     self.subscribeMarketData('au1906')
-    self.subscribeMarketData('rb1910')
+    # self.subscribeMarketData('j1905')
+    # self.subscribeMarketData('TA905')
+    # self.subscribeMarketData('CF905')
+    self.subscribeMarketData('sc1903')
+    time.sleep(1000)
     # 模拟
     # 这是实盘
     # self.connect('999839651', '5172187a', '9000', 'tcp://61.140.230.188:41205')
@@ -132,6 +144,61 @@ if __name__ == '__main__':
     第三组：Trade：218.202.237.33 :10002，Market：218.202.237.33 :10012；【移动】
     交易前置：180.168.146.187:10030，行情前置：180.168.146.187:10031；【7x24】
     # 这是实盘
-    # self.connect('9998139651', '5172187a', '9000', 'tcp://61.140.230.188:41205')
+    # self.connect('10201091', '5172187a', '8016', 'tcp://101.230.15.17:41213')
+    
+    {
+    'ActionDay': '20181221', 
+    'TradingDay': '20181221', 
+    'UpdateTime': '14:58:18',
+    'UpdateMillisec': 0,  
+    'InstrumentID': 'au1906', 
+    
+    'BidPrice1': 284.7, 
+    'BidPrice2': 1.7976931348623157e+308, 
+    'BidPrice3': 1.7976931348623157e+308,  
+    'BidPrice4': 1.7976931348623157e+308,
+    'BidPrice5': 1.7976931348623157e+308, 
+    
+    'BidVolume1': 233,
+    'BidVolume2': 0, 
+    'BidVolume3': 0, 
+    'BidVolume4': 0, 
+    'BidVolume5': 0,
+    
+    'AskPrice1': 284.75, 
+    'AskPrice2': 1.7976931348623157e+308,
+    'AskPrice3': 1.7976931348623157e+308, 
+    'AskPrice4': 1.7976931348623157e+308,  
+    'AskPrice5': 1.7976931348623157e+308,
+    'AskVolume1': 9, 
+    'AskVolume2': 0, 
+    'AskVolume3': 0, 
+    'AskVolume4': 0, 
+    'AskVolume5': 0,
+    
+    'CurrDelta': 1.7976931348623157e+308, 
+    'AveragePrice': 284419.34696700255, 
+    
+    'PreOpenInterest': 253774.0, 
+    'LastPrice': 284.75, 
+    'ExchangeInstID': '', 
+    'HighestPrice': 285.75, 
+    'PreSettlementPrice': 282.8, 
+    
+    'Volume': 202440, 
+    'Turnover': 57577852600.0, 
+    'OpenPrice': 283.4, 
+    'PreClosePrice': 282.15, 
+    'OpenInterest': 263606.0, 
+    'ClosePrice': 1.7976931348623157e+308, 
+    'LowerLimitPrice': 271.45, 
+    'UpperLimitPrice': 294.1, 
+    'SettlementPrice': 1.7976931348623157e+308, 
+    'LowestPrice': 283.1, 
+
+    'PreDelta': 0.0, 
+    'ExchangeID': ''}
+    
     """
+
 

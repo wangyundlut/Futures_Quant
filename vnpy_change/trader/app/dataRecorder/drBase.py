@@ -15,6 +15,9 @@ MINUTE_DB_NAME = 'FUTURES_1Min_Db'
 MINUTE_5_DB_NAME = 'FUTURES_5Min_Db'
 MINUTE_30_DB_NAME = 'FUTURES_30Min_Db'
 MINUTE_60_DB_NAME = 'FUTURES_60Min_Db'
+# 这里数据库的更正数据从新浪来的无错误的数据
+# 盘中的时候，要从tick数据更新数据
+# 盘后要更正数据，从新浪数据获取
 
 # 行情记录模块事件
 EVENT_DATARECORDER_LOG = 'eDataRecorderLog'     # 行情记录日志更新事件
