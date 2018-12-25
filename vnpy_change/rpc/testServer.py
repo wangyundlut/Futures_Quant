@@ -2,7 +2,7 @@
 
 from time import sleep, time
 
-from .vnrpc import RpcServer
+from vnpy_change.rpc import RpcServer
 
 
 ########################################################################
@@ -30,8 +30,8 @@ if __name__ == '__main__':
     ts = TestServer(repAddress, pubAddress)
     ts.start()
 
-    while 1:
+    while True:
         content = 'current server time is %s' % time()
         print(content)
         ts.publish('test', content)
-        sleep(2)
+

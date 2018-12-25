@@ -1,4 +1,5 @@
-# encoding: UTF-8
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 
 """
 一个ATR-RSI指标结合的交易策略，适合用在股指的1分钟和5分钟线上。
@@ -9,9 +10,9 @@
 
 """
 
-from vnpy.trader.vtObject import VtBarData
-from vnpy.trader.vtConstant import EMPTY_STRING
-from vnpy.trader.app.ctaStrategy.ctaTemplate import (CtaTemplate, 
+from vnpy_change.trader.vtObject import VtBarData
+from vnpy_change.trader.constant_common import EMPTY_STRING
+from vnpy_change.trader.app.ctaStrategy.ctaTemplate import (CtaTemplate,
                                                      BarGenerator, 
                                                      ArrayManager)
 

@@ -3,11 +3,14 @@
 
 import shelve
 import logging
+import datetime
+import traceback
+
 from collections import OrderedDict
 
 from copy import copy
 from pymongo import MongoClient, ASCENDING
-from pymongo.errors import ConnectionFailure
+from pymongo.errors import ConnectionFailure, DuplicateKeyError
 
 from vnpy_change.trader.vtGlobal import globalSetting
 from vnpy_change.trader.vtGateway import *
@@ -26,7 +29,7 @@ class MainEngine(object):
     def __init__(self, eventEngine):
         """Constructor"""
         # 记录今日日期
-        self.todayDate = datetime.now().strftime('%Y%m%d')
+        self.todayDate = datetime.datetime.now().strftime('%Y-%m-%d')
         
         # 绑定事件引擎
         self.eventEngine = eventEngine
@@ -90,7 +93,7 @@ class MainEngine(object):
             'appName': appModule.appName,
             'appDisplayName': appModule.appDisplayName,
             # 'appWidget': appModule.appWidget,
-            'appIco': appModule.appIco
+            # 'appIco': appModule.appIco
         }
         self.appDetailList.append(d)
         
@@ -423,6 +426,34 @@ class DataEngine(object):
         
         # 注册事件监听
         self.registerEvent()
+        # ----------------------------------------------------------------------
+        # 以下为自己修改的东西
+        # 连接数据库
+        self.dbConnect()
+
+        # 新的Tick
+        self.tick = {}
+        # 1分钟bar
+        self.bar_1Min = {}
+        self.lastTick_1Min = {}
+        # 60分钟bar
+        self.bar_60Min = {}
+        self.lastTick_60Min = {}
+        # 上一个Tick
+        self.lastTick = {}
+
+        self.bar_5Min = {}
+        self.bar_15Min = {}
+        self.bar_30Min = {}
+
+        self.tick_all = {}
+        self.bar_all = {}
+
+        # self.xminBar = None  # X分钟K线对象
+        # self.xmin = xmin  # X的值
+        # self.onXminBar = onXminBar  # X分钟K线的回调函数
+
+        # self.lastTick = None  # 上一TICK缓存对象
     
     #----------------------------------------------------------------------
     def registerEvent(self):
@@ -435,14 +466,189 @@ class DataEngine(object):
         self.eventEngine.register(EVENT_ACCOUNT, self.processAccountEvent)
         self.eventEngine.register(EVENT_LOG, self.processLogEvent)
         self.eventEngine.register(EVENT_ERROR, self.processErrorEvent)
-        
+
+    # ----------------------------------------------------------------------
+
+    def dbConnect(self):
+        """连接MongoDB数据库"""
+        mongoHost = 'localhost'
+        mongoPort = 27017
+        # 读取MongoDB的设置
+        try:
+
+            self.dbClient = MongoClient(mongoHost, mongoPort,
+                                        connectTimeoutMS=1000)
+
+            # 调用server_info查询服务器状态，防止服务器异常并未连接成功
+            self.dbClient.server_info()
+
+        except ConnectionFailure:
+            print(ConnectionFailure)
+
+
+    # ----------------------------------------------------------------------
+    def dbInsert(self, dbName, collectionName, d):
+        """向MongoDB中插入数据，d是具体数据"""
+        if self.dbClient:
+            db = self.dbClient[dbName]
+            collection = db[collectionName]
+            collection.insert_one(d)
+        else:
+            print('DataInsertFailure')
+
     #----------------------------------------------------------------------
     def processTickEvent(self, event):
-        """处理成交事件"""
+        """处理Tick事件，收到Tick数据之后
+        第一要向数据库中插入数据
+        第二要实时合成1分钟K线和1小时K线，并推送"""
         tick = event.dict_['data']
-        self.tickDict[tick.vtSymbol] = tick    
-    
-    #----------------------------------------------------------------------
+        self.tickDict[tick.vtSymbol] = tick
+
+        # 时间过滤
+
+        if (tick.time > '02:30:00' and tick.time < '08:59:59') or \
+           (tick.time > '11:30:00' and tick.time < '13:29:59') or \
+           (tick.time > '15:00:00' and tick.time < '20:59:59'):
+            return
+
+
+        vtSymbol = tick.vtSymbol
+        try:
+            self.dbInsert(TICK_DB_NAME, vtSymbol, tick.__dict__)
+            # 插入K线
+            # print(TICK_DB_NAME + vtSymbol + '插入成功')
+            # 更新Bar数据
+            self.updateTick_1Min(tick)
+            self.updateTick_60Min(tick)
+        except DuplicateKeyError:
+            print('键值重复插入失败，报错信息：%s' % traceback.format_exc())
+
+    # ----------------------------------------------------------------------
+    def updateTick_1Min(self, tick):
+        """TICK更新"""
+        newMinute = False  # 默认不是新的一分钟
+        vtSymbol = tick.vtSymbol
+        # 尚未创建对象
+        if not vtSymbol in self.bar_1Min.keys():
+            self.bar_1Min[vtSymbol] = VtBarData()
+            newMinute = True
+        # 新的一分钟
+        elif self.bar_1Min[vtSymbol].datetime.minute != tick.datetime.minute:
+            # 生成上一分钟K线的时间戳
+            self.bar_1Min[vtSymbol].datetime = self.bar_1Min[vtSymbol].datetime.replace(second=0, microsecond=0)  # 将秒和微秒设为0
+            self.bar_1Min[vtSymbol].date = self.bar_1Min[vtSymbol].datetime.strftime('%Y-%m-%d')
+            self.bar_1Min[vtSymbol].time = self.bar_1Min[vtSymbol].datetime.strftime('%H:%M:%S.%f')
+
+            # 推送已经结束的上一分钟K线
+            self.onBar_1Min(self.bar_1Min[vtSymbol])
+
+            # 创建新的K线对象
+            self.bar_1Min[vtSymbol] = VtBarData()
+            newMinute = True
+
+        # 初始化新一分钟的K线数据
+        if newMinute:
+            self.bar_1Min[vtSymbol].vtSymbol = tick.vtSymbol
+            self.bar_1Min[vtSymbol].symbol = tick.symbol
+            self.bar_1Min[vtSymbol].exchange = tick.exchange
+
+            self.bar_1Min[vtSymbol].open = tick.lastPrice
+            self.bar_1Min[vtSymbol].high = tick.lastPrice
+            self.bar_1Min[vtSymbol].low = tick.lastPrice
+        # 累加更新老一分钟的K线数据
+        else:
+            self.bar_1Min[vtSymbol].high = max(self.bar_1Min[vtSymbol].high, tick.lastPrice)
+            self.bar_1Min[vtSymbol].low = min(self.bar_1Min[vtSymbol].low, tick.lastPrice)
+
+        # 通用更新部分
+        self.bar_1Min[vtSymbol].close = tick.lastPrice
+        self.bar_1Min[vtSymbol].datetime = tick.datetime
+        self.bar_1Min[vtSymbol].openInterest = tick.openInterest
+
+        if vtSymbol in self.lastTick_1Min.keys():
+            volumeChange = tick.volume - self.lastTick_1Min[vtSymbol].volume  # 当前K线内的成交量
+            self.bar_1Min[vtSymbol].volume += max(volumeChange, 0)  # 避免夜盘开盘lastTick.volume为昨日收盘数据，导致成交量变化为负的情况
+
+        # 缓存Tick
+        self.lastTick_1Min[vtSymbol] = tick
+
+    # ----------------------------------------------------------------------
+    def updateTick_60Min(self, tick):
+        """TICK更新"""
+        newHour = False  # 默认不是新的一分钟
+        vtSymbol = tick.vtSymbol
+        # 尚未创建对象
+        if not vtSymbol in self.bar_60Min.keys():
+            self.bar_60Min[vtSymbol] = VtBarData()
+            newHour = True
+        # 新的一小时
+        elif self.bar_60Min[vtSymbol].datetime.hour != tick.datetime.hour:
+            # 生成上一分钟K线的时间戳
+            self.bar_60Min[vtSymbol].datetime = self.bar_60Min[vtSymbol].datetime.replace(minute=0, second=0, microsecond=0)  # 将秒和微秒设为0
+            self.bar_60Min[vtSymbol].date = self.bar_60Min[vtSymbol].datetime.strftime('%Y-%m-%d')
+            self.bar_60Min[vtSymbol].time = self.bar_60Min[vtSymbol].datetime.strftime('%H:%M:%S.%f')
+
+            # 推送已经结束的上一分钟K线
+            self.onBar_60Min(self.bar_60Min[vtSymbol])
+
+            # 创建新的K线对象
+            self.bar_60Min[vtSymbol] = VtBarData()
+            newHour = True
+
+        # 初始化新一分钟的K线数据
+        if newHour:
+            self.bar_60Min[vtSymbol].vtSymbol = tick.vtSymbol
+            self.bar_60Min[vtSymbol].symbol = tick.symbol
+            self.bar_60Min[vtSymbol].exchange = tick.exchange
+
+            self.bar_60Min[vtSymbol].open = tick.lastPrice
+            self.bar_60Min[vtSymbol].high = tick.lastPrice
+            self.bar_60Min[vtSymbol].low = tick.lastPrice
+        # 累加更新老一分钟的K线数据
+        else:
+            self.bar_60Min[vtSymbol].high = max(self.bar_60Min[vtSymbol].high, tick.lastPrice)
+            self.bar_60Min[vtSymbol].low = min(self.bar_60Min[vtSymbol].low, tick.lastPrice)
+
+        # 通用更新部分
+        self.bar_60Min[vtSymbol].close = tick.lastPrice
+        self.bar_60Min[vtSymbol].datetime = tick.datetime
+        self.bar_60Min[vtSymbol].openInterest = tick.openInterest
+
+        if vtSymbol in self.lastTick_60Min.keys():
+            volumeChange = tick.volume - self.lastTick_60Min[vtSymbol].volume  # 当前K线内的成交量
+            self.bar_60Min[vtSymbol].volume += max(volumeChange, 0)  # 避免夜盘开盘lastTick.volume为昨日收盘数据，导致成交量变化为负的情况
+
+        # 缓存Tick
+        self.lastTick_60Min[vtSymbol] = tick
+
+
+    # ----------------------------------------------------------------------
+    def onBar_1Min(self, bar):
+        """收到K线之后，插入数据库，进行广播"""
+        try:
+            self.dbInsert(MINUTE_01_DB_NAME, bar.vtSymbol, bar.__dict__)
+        except DuplicateKeyError:
+            print('键值重复插入失败，报错信息：%s' % traceback.format_exc())
+
+        event1 = Event(type_=EVENT_BAR_01MIN)
+        event1.dict_['data'] = bar
+        self.eventEngine.put(event1)
+        print("推送一分钟K线 " + bar.time + " " + bar.vtSymbol + " " + "{0:.2f}".format(bar.close))
+
+    # ----------------------------------------------------------------------
+    def onBar_60Min(self, bar):
+        """收到K线之后，插入数据库，进行广播"""
+        try:
+            self.dbInsert(MINUTE_60_DB_NAME, bar.vtSymbol, bar.__dict__)
+        except DuplicateKeyError:
+            print('键值重复插入失败，报错信息：%s' % traceback.format_exc())
+
+        event1 = Event(type_=EVENT_BAR_60MIN)
+        event1.dict_['data'] = bar
+        self.eventEngine.put(event1)
+        print("推送一小时K线 " + bar.time + " " + bar.vtSymbol + " " + "{0:.2f}".format(bar.close))
+
+    # ----------------------------------------------------------------------
     def processContractEvent(self, event):
         """处理合约事件"""
         contract = event.dict_['data']
@@ -695,7 +901,7 @@ class LogEngine(object):
         """添加文件输出"""
         if not self.fileHandler:
             if not filename:
-                filename = 'vt_' + datetime.now().strftime('%Y%m%d') + '.log'
+                filename = 'vt_' + datetime.datetime.now().strftime('%Y-%m-%d') + '.log'
             filepath = getTempPath(filename)
             self.fileHandler = logging.FileHandler(filepath, mode='w', encoding='utf-8')
             self.fileHandler.setLevel(self.level)
@@ -1083,3 +1289,7 @@ class PositionDetail(object):
         
         # 其他情况则直接返回空
         return []
+
+if __name__ == '__main__':
+    x = DataEngine('e')
+    print(x)

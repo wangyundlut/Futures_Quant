@@ -5,7 +5,7 @@
 '''
 
 # CTA引擎中涉及的数据类定义
-from vnpy.trader.vtConstant import EMPTY_UNICODE, EMPTY_STRING, EMPTY_FLOAT, EMPTY_INT
+from vnpy_change.trader.constant_common import EMPTY_UNICODE, EMPTY_STRING, EMPTY_FLOAT, EMPTY_INT
 
 # 常量定义
 # CTA引擎中涉及到的交易方向类型

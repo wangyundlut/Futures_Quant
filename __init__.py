@@ -2,7 +2,10 @@
 # author:@Jack.Wang
 
 
+import setuptools
 
+import vnpy_change
+setuptools.find_packages()
 __all__ = [
     'config',
     'ctp',

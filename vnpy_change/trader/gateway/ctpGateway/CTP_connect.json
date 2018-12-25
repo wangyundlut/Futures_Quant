@@ -1,7 +1,27 @@
-{
-    "brokerID": "8016",
-    "mdAddress": "tcp://101.230.15.17:41213",
-    "tdAddress": "tcp://101.230.15.17:41205",
-    "userID": "10201091",
-    "password": "5172187a"
-}
+[
+    {   "name": "sunday_test",
+        "brokerID": "9999",
+        "mdAddress": "tcp://180.168.146.187:10031",
+        "tdAddress": "tcp://180.168.146.187:10030",
+        "userID": "123609",
+        "password": "wangyun199"
+    },
+
+    {
+        "name": "workday_test",
+        "brokerID": "9999",
+        "mdAddress": "tcp://180.168.146.187:10011",
+        "tdAddress": "tcp://180.168.146.187:10001",
+        "userID": "123609",
+        "password": "wangyun199"
+    },
+
+    {
+        "name": "scqh",
+        "brokerID": "8016",
+        "mdAddress": "tcp://101.230.15.17:41213",
+        "tdAddress": "tcp://101.230.15.17:41205",
+        "userID": "10201091",
+        "password": "5172187a"
+    }
+]

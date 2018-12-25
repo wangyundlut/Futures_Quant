@@ -19,3 +19,9 @@ EVENT_ACCOUNT = 'eAccount.'             # 账户回报事件
 EVENT_CONTRACT = 'eContract.'           # 合约基础信息回报事件
 EVENT_ERROR = 'eError.'                 # 错误回报事件
 EVENT_HISTORY = 'eHistory.'             # K线数据查询回报事件
+
+EVENT_BAR_01MIN = 'eBar01min'           # 01分钟K线事件
+EVENT_BAR_05MIN = 'eBar05min'           # 05分钟K线事件
+EVENT_BAR_15MIN = 'eBar15min'           # 15分钟K线事件
+EVENT_BAR_30MIN = 'eBar30min'           # 30分钟K线事件
+EVENT_BAR_60MIN = 'eBar60min'           # 60分钟K线事件

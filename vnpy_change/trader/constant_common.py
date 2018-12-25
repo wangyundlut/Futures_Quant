@@ -109,3 +109,19 @@ INTERVAL_1H = u'1小时'
 INTERVAL_4H = u'4小时'
 INTERVAL_DAILY = u'日线'
 INTERVAL_WEEKLY = u'周线'
+
+# 数据库名称
+SETTING_DB_NAME = 'VnTrader_Setting_Db'
+TICK_DB_NAME = 'FUTURES_Tick_Db'
+DAILY_DB_NAME = 'FUTURES_Daily_Db'
+
+MINUTE_01_DB_NAME = 'FUTURES_01Min_Db'
+MINUTE_05_DB_NAME = 'FUTURES_05Min_Db'
+MINUTE_30_DB_NAME = 'FUTURES_30Min_Db'
+MINUTE_60_DB_NAME = 'FUTURES_60Min_Db'
+# 这里数据库的更正数据从新浪来的无错误的数据
+# 盘中的时候，要从tick数据更新数据
+# 盘后要更正数据，从新浪数据获取
+
+# 行情记录模块事件
+EVENT_DATARECORDER_LOG = 'eDataRecorderLog'     # 行情记录日志更新事件

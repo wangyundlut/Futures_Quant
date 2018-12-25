@@ -4,7 +4,7 @@
 from logging import INFO
 
 import time
-from datetime import datetime
+import datetime
 
 from vnpy_change.trader.constant_common import *
 
@@ -95,8 +95,8 @@ class VtTickData(VtBaseData):
         tick.lastPrice = lastPrice
         tick.lastVolume = lastVolume
         tick.openInterest = openInterest
-        tick.datetime = datetime.now()
-        tick.date = tick.datetime.strftime('%Y%m%d')
+        tick.datetime = datetime.datetime.now()
+        tick.date = tick.datetime.strftime('%Y-%m-%d')
         tick.time = tick.datetime.strftime('%H:%M:%S')
     
         tick.openPrice = openPrice
@@ -248,7 +248,7 @@ class VtTradeData(VtBaseData):
         trade.direction = direction
         trade.price = tradePrice
         trade.volume = tradeVolume
-        trade.tradeTime = datetime.now().strftime('%H:%M:%S')
+        trade.tradeTime = datetime.datetime.now().strftime('%H:%M:%S')
         return trade
     
     #----------------------------------------------------------------------
@@ -269,7 +269,7 @@ class VtTradeData(VtBaseData):
         trade.direction = order.direction
         trade.price = tradePrice
         trade.volume = tradeVolume
-        trade.tradeTime = datetime.now().strftime('%H:%M:%S')
+        trade.tradeTime = datetime.datetime.now().strftime('%H:%M:%S')
         return trade
     
 

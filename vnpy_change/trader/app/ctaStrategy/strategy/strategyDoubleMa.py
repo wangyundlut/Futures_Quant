@@ -1,15 +1,17 @@
-# encoding: UTF-8
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 
 """
 这里的Demo是一个最简单的双均线策略实现
 """
 
-from __future__ import division
-
-from vnpy.trader.vtConstant import EMPTY_STRING, EMPTY_FLOAT
-from vnpy.trader.app.ctaStrategy.ctaTemplate import (CtaTemplate, 
+from vnpy_change.trader.constant_common import EMPTY_STRING, EMPTY_FLOAT
+from vnpy_change.trader.app.ctaStrategy.ctaTemplate import (CtaTemplate,
                                                      BarGenerator,
                                                      ArrayManager)
+from wxpy import *
+
+
 
 
 ########################################################################
@@ -57,6 +59,8 @@ class DoubleMaStrategy(CtaTemplate):
         
         self.bg = BarGenerator(self.onBar)
         self.am = ArrayManager()
+        # self.bot = Bot(cache_path=True)
+        # self.friend = self.bot.groups().search(u'信息通知群')[0]
         
         # 注意策略类中的可变对象属性（通常是list和dict等），在策略初始化时需要重新创建，
         # 否则会出现多个策略实例之间数据共享的情况，有可能导致潜在的策略逻辑错误风险，
@@ -94,6 +98,8 @@ class DoubleMaStrategy(CtaTemplate):
     #----------------------------------------------------------------------
     def onBar(self, bar):
         """收到Bar推送（必须由用户继承实现）"""
+        print('double ma receive: ' + bar.time + ' :' + "{0:.2f}".format(bar.close))
+        # self.friend.send('double ma receive: ' + bar.time + ' : ' + bar.vtSymbol  + " {0:.2f}".format(bar.close))
         am = self.am        
         am.updateBar(bar)
         if not am.inited:

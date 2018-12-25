@@ -7,7 +7,10 @@ from wxpy import *
 import requests
 
 #机器人
+bot = Bot()
 bot = Bot(cache_path=True)
+
+#发送
 
 def get_news():
     url = "http://open.cicba.com/dsapi/"
@@ -18,18 +21,20 @@ def get_news():
 
 def send_news(str):
     try:
-        contents = ['已实现自动发送！！！',2,3]
+        contents = ['已实现自动发送！！！',2]
         #好友列表  备注显示
         #print(bot.friends())
         print(bot.friends().search(u'信息通知群'))
-        all_group = bot.groups().search('信息通知群')
-
+        group = bot.groups().search('信息通知群')[0]
+        group.send(contents[0])
+        all_group = bot.groups().search('信息通知群')[0]
+        my_friend = bot.friends().search(u'信息通知群')[0]
+        # 发送
+        my_friend.send(contents[0])
 
 
         # 微信昵称，不是账号
-        my_friend = bot.friends().search(u'信息通知群')[0]
-        #发送
-        my_friend.send(contents[0])
+
         #发送图片
         #my_friend.send_image("C:\\Users\\Administrator.000\\Desktop\\intiloading.png")
         # 发送视频
@@ -66,7 +71,7 @@ if __name__ == '__main__':
     # if str == "q":
     #     exit(0)
     # else:
-    send_news(str)
+    send_news('what')
 
     #sys.exit()
 

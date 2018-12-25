@@ -3,7 +3,6 @@
 '''
 动态载入所有的策略类
 '''
-from __future__ import print_function
 
 import os
 import importlib
@@ -37,10 +36,10 @@ for root, subdirs, files in os.walk(path):
         # 只有文件名中包含strategy且以.py结尾的文件，才是策略文件
         if 'strategy' in name and name[-3:] == '.py' and '/' not in name and '\\' not in name:
             # 模块名称需要模块路径前缀
-            moduleName = 'vnpy.trader.app.ctaStrategy.strategy.' + name.replace('.py', '')
+            moduleName = 'vnpy_change.trader.app.ctaStrategy.strategy.' + name.replace('.py', '')
             loadStrategyModule(moduleName)
 
-
+"""
 # 遍历工作目录下的文件
 workingPath = os.getcwd()
 for root, subdirs, files in os.walk(workingPath):
@@ -50,3 +49,4 @@ for root, subdirs, files in os.walk(workingPath):
             # 模块名称无需前缀
             moduleName = name.replace('.py', '')
             loadStrategyModule(moduleName)
+"""

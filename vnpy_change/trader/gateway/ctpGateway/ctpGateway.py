@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
 '''
 vn.ctp的gateway接入
 
@@ -79,7 +80,7 @@ statusMapReverse = {v:k for k,v in statusMap.items()}
 symbolExchangeDict = {}
 
 # 夜盘交易时间段分隔判断
-NIGHT_TRADING = datetime(1900, 1, 1, 20).time()
+NIGHT_TRADING = datetime.datetime(1900, 1, 1, 20).time()
 
 
 ########################################################################
@@ -118,11 +119,14 @@ class CtpGateway(VtGateway):
         setting = json.load(f)
         f.close()
         try:
-            userID = str(setting['userID'])
-            password = str(setting['password'])
-            brokerID = str(setting['brokerID'])
-            tdAddress = str(setting['tdAddress'])
-            mdAddress = str(setting['mdAddress'])
+            # 这里改一下，先不动大的，先把单账号问题解决掉
+            for set in setting:
+                if set['name'] == 'scqh':
+                    userID = str(set['userID'])
+                    password = str(set['password'])
+                    brokerID = str(set['brokerID'])
+                    tdAddress = str(set['tdAddress'])
+                    mdAddress = str(set['mdAddress'])
             
             # 如果json文件提供了验证码
             if 'authCode' in setting: 
@@ -378,33 +382,15 @@ class CtpMdApi(MdApi):
         
         # 大商所日期转换
         if tick.exchange == EXCHANGE_DCE:
-            tick.date = datetime.now().strftime('%Y-%m-%d')
+            tick.date = datetime.datetime.now().strftime('%Y-%m-%d')
 
-        # 上交所，SEE，股票期权相关
-        """
-        if tick.exchange == EXCHANGE_SSE:
-            tick.bidPrice2 = data['BidPrice2']
-            tick.bidVolume2 = data['BidVolume2']
-            tick.askPrice2 = data['AskPrice2']
-            tick.askVolume2 = data['AskVolume2']
+        # 生成datetime对象
+        if not tick.datetime:
+            if '.' in tick.time:
+                tick.datetime = datetime.datetime.strptime(' '.join([tick.date, tick.time]), '%Y-%m-%d %H:%M:%S.%f')
+            else:
+                tick.datetime = datetime.datetime.strptime(' '.join([tick.date, tick.time]), '%Y-%m-%d %H:%M:%S')
 
-            tick.bidPrice3 = data['BidPrice3']
-            tick.bidVolume3 = data['BidVolume3']
-            tick.askPrice3 = data['AskPrice3']
-            tick.askVolume3 = data['AskVolume3']
-
-            tick.bidPrice4 = data['BidPrice4']
-            tick.bidVolume4 = data['BidVolume4']
-            tick.askPrice4 = data['AskPrice4']
-            tick.askVolume4 = data['AskVolume4']
-
-            tick.bidPrice5 = data['BidPrice5']
-            tick.bidVolume5 = data['BidVolume5']
-            tick.askPrice5 = data['AskPrice5']
-            tick.askVolume5 = data['AskVolume5']
-
-            tick.date = data['TradingDay']
-        """
         self.gateway.onTick(tick)
         
     #---------------------------------------------------------------------- 
@@ -582,7 +568,8 @@ class CtpTdApi(TdApi):
             err = VtErrorData()
             err.gatewayName = self.gatewayName
             err.errorID = error['ErrorID']
-            err.errorMsg = error['ErrorMsg'].decode('gbk')
+            err.errorMsg = error['ErrorMsg']
+            # err.errorMsg = error['ErrorMsg'].decode('gbk')
             self.gateway.onError(err)
             
             # 标识登录失败，防止用错误信息连续重复登录
@@ -603,7 +590,8 @@ class CtpTdApi(TdApi):
             err = VtErrorData()
             err.gatewayName = self.gatewayName
             err.errorID = error['ErrorID']
-            err.errorMsg = error['ErrorMsg'].decode('gbk')
+            err.errorMsg = error['ErrorMsg']
+            # err.errorMsg = error['ErrorMsg'].decode('gbk')
             self.gateway.onError(err)
         
     #----------------------------------------------------------------------
@@ -638,7 +626,8 @@ class CtpTdApi(TdApi):
         err = VtErrorData()
         err.gatewayName = self.gatewayName
         err.errorID = error['ErrorID']
-        err.errorMsg = error['ErrorMsg'].decode('gbk')
+        err.errorMsg = error['ErrorMsg']
+        # err.errorMsg = error['ErrorMsg'].decode('gbk')
         self.gateway.onError(err)
         
     #----------------------------------------------------------------------
@@ -657,7 +646,8 @@ class CtpTdApi(TdApi):
         err = VtErrorData()
         err.gatewayName = self.gatewayName
         err.errorID = error['ErrorID']
-        err.errorMsg = error['ErrorMsg'].decode('gbk')
+        err.errorMsg = error['ErrorMsg']
+        # err.errorMsg = error['ErrorMsg'].decode('gbk')
         self.gateway.onError(err)
         
     #----------------------------------------------------------------------
@@ -848,6 +838,7 @@ class CtpTdApi(TdApi):
     #----------------------------------------------------------------------
     def onRspQryInstrument(self, data, error, n, last):
         """合约查询回报"""
+        # print(data)
         contract = VtContractData()
         contract.gatewayName = self.gatewayName
 
@@ -1138,7 +1129,8 @@ class CtpTdApi(TdApi):
         err = VtErrorData()
         err.gatewayName = self.gatewayName
         err.errorID = error['ErrorID']
-        err.errorMsg = error['ErrorMsg'].decode('gbk')
+        err.errorMsg = error['ErrorMsg']
+        # err.errorMsg = error['ErrorMsg'].decode('gbk')
         self.gateway.onError(err)
         
     #----------------------------------------------------------------------
@@ -1147,7 +1139,8 @@ class CtpTdApi(TdApi):
         err = VtErrorData()
         err.gatewayName = self.gatewayName
         err.errorID = error['ErrorID']
-        err.errorMsg = error['ErrorMsg'].decode('gbk')
+        err.errorMsg = error['ErrorMsg']
+        # err.errorMsg = error['ErrorMsg'].decode('gbk')
         self.gateway.onError(err)
         
     #----------------------------------------------------------------------

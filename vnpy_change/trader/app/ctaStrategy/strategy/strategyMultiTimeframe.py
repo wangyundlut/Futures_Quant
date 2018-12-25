@@ -1,12 +1,13 @@
-# encoding: UTF-8
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 
 """
 一个跨时间周期的策略，基于15分钟K线判断趋势方向，并使用5分钟RSI指标作为入场
 """
 
-from vnpy.trader.vtObject import VtBarData
-from vnpy.trader.vtConstant import EMPTY_STRING
-from vnpy.trader.app.ctaStrategy.ctaTemplate import (CtaTemplate, 
+from vnpy_change.trader.vtObject import VtBarData
+from vnpy_change.trader.constant_common import EMPTY_STRING
+from vnpy_change.trader.app.ctaStrategy.ctaTemplate import (CtaTemplate,
                                                      BarGenerator, 
                                                      ArrayManager)
 

@@ -1,16 +1,15 @@
-# encoding: UTF-8
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 
 """
 单标的海龟交易策略，实现了完整海龟策略中的信号部分。
 """
 
-from __future__ import division
-
-from vnpy.trader.vtObject import VtBarData
-from vnpy.trader.vtConstant import DIRECTION_LONG, DIRECTION_SHORT
-from vnpy.trader.app.ctaStrategy.ctaTemplate import (CtaTemplate, 
-                                                     BarGenerator, 
-                                                     ArrayManager)
+from vnpy_change.trader.vtObject import VtBarData
+from vnpy_change.trader.constant_common import DIRECTION_LONG, DIRECTION_SHORT
+from vnpy_change.trader.app.ctaStrategy.ctaTemplate import (CtaTemplate,
+                                                            BarGenerator,
+                                                            ArrayManager)
 
 
 ########################################################################

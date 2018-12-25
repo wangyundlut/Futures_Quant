@@ -1,4 +1,5 @@
-# encoding: UTF-8
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 
 """
 感谢Darwin Quant贡献的策略思路。
@@ -16,11 +17,10 @@
 
 """
 
-from __future__ import division
 
-from vnpy.trader.vtObject import VtBarData
-from vnpy.trader.vtConstant import EMPTY_STRING
-from vnpy.trader.app.ctaStrategy.ctaTemplate import (CtaTemplate, 
+from vnpy_change.trader.vtObject import VtBarData
+from vnpy_change.trader.constant_common import EMPTY_STRING
+from vnpy_change.trader.app.ctaStrategy.ctaTemplate import (CtaTemplate,
                                                      BarGenerator, 
                                                      ArrayManager)
 

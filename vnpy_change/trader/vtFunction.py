@@ -12,7 +12,7 @@ import os
 import decimal
 import json
 import traceback
-from datetime import datetime
+import datetime
 from math import isnan
 
 from six import text_type
@@ -38,7 +38,7 @@ def safeUnicode(value):
 #----------------------------------------------------------------------
 def todayDate():
     """获取当前本机电脑时间的日期"""
-    return datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)    
+    return datetime.datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
 
 
 # 图标路径

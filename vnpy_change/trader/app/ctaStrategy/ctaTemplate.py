@@ -1,13 +1,14 @@
-# encoding: UTF-8
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 
 '''
 本文件包含了CTA引擎中的策略开发用模板，开发策略时需要继承CtaTemplate类。
 '''
 
-from vnpy.trader.vtConstant import *
-from vnpy.trader.vtUtility import BarGenerator, ArrayManager
+from vnpy_change.trader.constant_common import *
+from vnpy_change.trader.vtUtility import BarGenerator, ArrayManager
 
-from .ctaBase import *
+from vnpy_change.trader.app.ctaStrategy.ctaBase import *
 
 
 ########################################################################
@@ -24,7 +25,7 @@ class CtaTemplate(object):
     
     # 策略的基本参数
     name = EMPTY_UNICODE           # 策略实例名称
-    vtSymbol = EMPTY_STRING        # 交易的合约vt系统代码    
+    vtSymbol = []                  # 交易的合约vt系统代码
     productClass = EMPTY_STRING    # 产品类型（只有IB接口需要）
     currency = EMPTY_STRING        # 货币（只有IB接口需要）
     

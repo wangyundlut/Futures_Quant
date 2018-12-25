@@ -1,28 +1,28 @@
-# encoding: UTF-8
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 
 '''
 本文件中实现了CTA策略引擎，针对CTA类型的策略，抽象简化了部分底层接口的功能。
 '''
 
-from __future__ import division
 
 import json
 import os
 import traceback
 from collections import OrderedDict
 from datetime import datetime, timedelta
-from copy import copy
+import copy
 
-from vnpy.event import Event
-from vnpy.trader.vtEvent import *
-from vnpy.trader.vtConstant import *
-from vnpy.trader.vtObject import VtTickData, VtBarData
-from vnpy.trader.vtGateway import VtSubscribeReq, VtOrderReq, VtCancelOrderReq, VtLogData
-from vnpy.trader.vtFunction import todayDate, getJsonPath
-from vnpy.trader.app import AppEngine
+from vnpy_change.event import Event
+from vnpy_change.trader.vtEvent import *
+from vnpy_change.trader.constant_common import *
+from vnpy_change.trader.vtObject import *
+from vnpy_change.trader.vtGateway import *
+from vnpy_change.trader.vtFunction import todayDate, getJsonPath
+from vnpy_change.trader.app import AppEngine
 
-from .ctaBase import *
-from .strategy import STRATEGY_CLASS
+from vnpy_change.trader.app.ctaStrategy.ctaBase import *
+from vnpy_change.trader.app.ctaStrategy.strategy import STRATEGY_CLASS
 
 
 ########################################################################
@@ -263,7 +263,8 @@ class CtaEngine(AppEngine):
     def processTickEvent(self, event):
         """处理行情推送"""
         tick = event.dict_['data']
-        tick = copy(tick)
+        tick = copy.deepcopy(tick)
+        # print('CTA_ENGINE:' + tick.time + tick.vtSymbol + "{0:.2f}".format(tick.lastPrice))
         
         # 收到tick行情后，先处理本地停止单（检查是否要立即发出）
         self.processStopOrder(tick)
@@ -274,7 +275,7 @@ class CtaEngine(AppEngine):
             try:
                 # 添加datetime字段
                 if not tick.datetime:
-                    tick.datetime = datetime.strptime(' '.join([tick.date, tick.time]), '%Y%m%d %H:%M:%S.%f')
+                    tick.datetime = datetime.strptime(' '.join([tick.date, tick.time]), '%Y-%m-%d %H:%M:%S.%f')
             except ValueError:
                 self.writeCtaLog(traceback.format_exc())
                 return
@@ -444,7 +445,7 @@ class CtaEngine(AppEngine):
                 strategy.inited = True
                 self.callStrategyFunc(strategy, strategy.onInit)
 
-                self.loadSyncData(strategy)                             # 初始化完成后加载同步数据
+                # self.loadSyncData(strategy)                             # 初始化完成后加载同步数据
                 self.subscribeMarketData(strategy)                      # 加载同步数据后再订阅行情
             else:
                 self.writeCtaLog(u'请勿重复初始化策略实例：%s' %name)
@@ -602,7 +603,7 @@ class CtaEngine(AppEngine):
         flt = {'name': strategy.name,
                'vtSymbol': strategy.vtSymbol}
         
-        d = copy(flt)
+        d = copy.deepcopy(flt)
         for key in strategy.syncList:
             d[key] = strategy.__getattribute__(key)
         
@@ -662,5 +663,4 @@ class CtaEngine(AppEngine):
         if contract:
             return contract.priceTick
         return 0
-        
         

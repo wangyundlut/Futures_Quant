@@ -1,5 +1,5 @@
-# encoding: UTF-8
-
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 """
 一个多信号组合策略，基于的信号包括：
 RSI（1分钟）：大于70为多头、低于30为空头
@@ -7,9 +7,9 @@ CCI（1分钟）：大于10为多头、低于-10为空头
 MA（5分钟）：快速大于慢速为多头、低于慢速为空头
 """
 
-from vnpy.trader.vtObject import VtBarData
-from vnpy.trader.vtConstant import EMPTY_STRING
-from vnpy.trader.app.ctaStrategy.ctaTemplate import (TargetPosTemplate, 
+from vnpy_change.trader.vtObject import VtBarData
+from vnpy_change.trader.constant_common import EMPTY_STRING
+from vnpy_change.trader.app.ctaStrategy.ctaTemplate import (TargetPosTemplate,
                                                      CtaSignal,
                                                      BarGenerator, 
                                                      ArrayManager)

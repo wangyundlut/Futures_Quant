@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+
 FUTURES_COMMON = 'http://stock2.finance.sina.com.cn/futures/api/json.php/IndexService.getInnerFutures'
 
 FUTURES_MIN_FIRST = FUTURES_COMMON + 'MiniKLine'

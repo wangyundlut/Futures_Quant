@@ -41,7 +41,7 @@ class BarGenerator(object):
         elif self.bar.datetime.minute != tick.datetime.minute:
             # 生成上一分钟K线的时间戳
             self.bar.datetime = self.bar.datetime.replace(second=0, microsecond=0)  # 将秒和微秒设为0
-            self.bar.date = self.bar.datetime.strftime('%Y%m%d')
+            self.bar.date = self.bar.datetime.strftime('%Y-%m-%d')
             self.bar.time = self.bar.datetime.strftime('%H:%M:%S.%f')
             
             # 推送已经结束的上一分钟K线
@@ -107,7 +107,7 @@ class BarGenerator(object):
         if not (bar.datetime.minute + 1) % self.xmin:   # 可以用X整除
             # 生成上一X分钟K线的时间戳
             self.xminBar.datetime = self.xminBar.datetime.replace(second=0, microsecond=0)  # 将秒和微秒设为0
-            self.xminBar.date = self.xminBar.datetime.strftime('%Y%m%d')
+            self.xminBar.date = self.xminBar.datetime.strftime('%Y-%m-%d')
             self.xminBar.time = self.xminBar.datetime.strftime('%H:%M:%S.%f')
             
             # 推送

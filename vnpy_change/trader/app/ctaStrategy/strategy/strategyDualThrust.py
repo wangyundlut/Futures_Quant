@@ -1,4 +1,5 @@
-# encoding: UTF-8
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 
 """
 DualThrust交易策略
@@ -6,9 +7,9 @@ DualThrust交易策略
 
 from datetime import time
 
-from vnpy.trader.vtObject import VtBarData
-from vnpy.trader.vtConstant import EMPTY_STRING
-from vnpy.trader.app.ctaStrategy.ctaTemplate import CtaTemplate, BarGenerator
+from vnpy_change.trader.vtObject import VtBarData
+from vnpy_change.trader.constant_common import EMPTY_STRING
+from vnpy_change.trader.app.ctaStrategy.ctaTemplate import CtaTemplate, BarGenerator
 
 
 ########################################################################

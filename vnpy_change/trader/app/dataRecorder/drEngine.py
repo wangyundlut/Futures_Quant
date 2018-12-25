@@ -283,7 +283,7 @@ class DrEngine(object):
     #----------------------------------------------------------------------
     def run(self):
         """运行插入线程"""
-        # 这个一直跑，会不会卡死其它的线程？
+        # 这个一直跑，有可能卡死其它线程，试一下
         while self.active:
             try:
                 dbName, collectionName, d = self.queue.get(block=True, timeout=1)
@@ -296,12 +296,12 @@ class DrEngine(object):
                 # 使用insert模式更新数据，可能存在时间戳重复的情况，需要用户自行清洗
                 try:
                     self.mainEngine.dbInsert(dbName, collectionName, d)
-                    print(dbName + collectionName + '插入成功')
+                    self.writeDrLog(dbName + ' ' + collectionName + ' ' + d['time'] +' ' + d['vtSymbol'] + ' 插入成功')
                 except DuplicateKeyError:
                     self.writeDrLog(u'键值重复插入失败，报错信息：%s' % traceback.format_exc())
             except Empty:
-                time.sleep(0.5)
-                # pass
+                # time.sleep(0.5)
+                pass
             
     #----------------------------------------------------------------------
     def start(self):

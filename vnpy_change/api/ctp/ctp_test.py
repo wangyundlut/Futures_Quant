@@ -95,7 +95,6 @@ class zyc_ctpmd(MdApi, zyc_time):
 
             '''
         except:
-            pass
             self.zyc_print('行情异常')
 
     def onRspUserLogout(self, data, error, n, last):
@@ -123,13 +122,26 @@ class zyc_ctpmd(MdApi, zyc_time):
         # 退订合约 self.unSubscribeMarketData(str(symbol))
 
 
+
+    def onRspQryInstrument(self, data, error, n, last):
+        self.zyc_print('合约查询回报')
+        self.zyc_print(data)
+
+    def qryInstrument(self):
+        self.reqID += 1
+        self.reqQryInstrument({}, self.reqID)
+
+
 if __name__ == '__main__':
     # 测试
     self = zyc_ctpmd()
     self.connect('10201091', '5172187a', '8016', 'tcp://101.230.15.17:41213')
+    #
+    # self.qryInstrument()
+    #self.reqQryInstrument({}, self.reqID)
     # self.connect('123609', 'wangyun199', '9999', 'tcp://180.168.146.187:10011')
     import threading
-    self.subscribeMarketData('au1906')
+    # self.subscribeMarketData('au1906')
     # self.subscribeMarketData('j1905')
     # self.subscribeMarketData('TA905')
     # self.subscribeMarketData('CF905')

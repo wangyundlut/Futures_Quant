@@ -1,6 +1,7 @@
-# encoding: UTF-8
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 
-from __future__ import absolute_import
+
 from vnpy_change.trader import constant_common
 from vnpy_change.trader.gateway.ctpGateway.ctpGateway import CtpGateway
 
